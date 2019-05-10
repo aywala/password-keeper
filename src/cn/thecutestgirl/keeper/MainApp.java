@@ -14,6 +14,7 @@ import cn.thecutestgirl.keeper.model.Account;
 import cn.thecutestgirl.keeper.model.AccountListWrapper;
 import cn.thecutestgirl.keeper.view.AccountEditDialogController;
 import cn.thecutestgirl.keeper.view.AccountOverviewController;
+import cn.thecutestgirl.keeper.view.KeyInputDialogController;
 import cn.thecutestgirl.keeper.view.RootLayoutController;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
@@ -21,6 +22,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.AnchorPane;
@@ -32,7 +34,8 @@ public class MainApp extends Application {
 
     private Stage primaryStage;
     private BorderPane rootLayout;
-    private String key="123";
+    private String key=null;
+    private boolean isChanged=false;
     
     /**
      * The data as an observable list of Accounts.
@@ -84,6 +87,10 @@ public class MainApp extends Application {
             // Give the controller access to the main app.
             RootLayoutController controller = loader.getController();
             controller.setMainApp(this);
+            
+            this.primaryStage.setOnCloseRequest(event->{
+            	event.consume();
+            	controller.handleExit();});
 
             primaryStage.show();
         } catch (IOException e) {
@@ -136,6 +143,7 @@ public class MainApp extends Application {
             AccountEditDialogController controller = loader.getController();
             controller.setDialogStage(dialogStage);
             controller.setAccount(account);
+            controller.setMainApp(this);
 
             // Show the dialog and wait until the user closes it
             dialogStage.showAndWait();
@@ -204,41 +212,57 @@ public class MainApp extends Application {
      * @param file
      */
     public void loadAccountDataFromFile(File file) {
-    	
-    	TextInputDialog dialog = new TextInputDialog("");
-    	dialog.setTitle("Key");
-    	dialog.setContentText("Please enter your key:");
-    	 
-    	// Traditional way to get the response value.
-    	Optional<String> result = dialog.showAndWait();
-    	if (!result.isPresent()) System.exit(0);
-    	if (result.isPresent()){
-    	    this.key=result.get();
-    	}
-    	 
-    	
-        try {
-            JAXBContext context = JAXBContext
-                    .newInstance(AccountListWrapper.class);
-            Unmarshaller um = context.createUnmarshaller();
-
-            // Reading XML from the file and unmarshalling.
-            AccountListWrapper wrapper = (AccountListWrapper) um.unmarshal(file);
-            List<Account> enc_accounts=wrapper.getAccounts();
-            List<Account> dec_accounts = new LinkedList<>();
-            for(int i=0;i<enc_accounts.size();i++) {
-            	Account dec_account=new Account();
-                dec_account.setSite(PBE.decryptPBE(enc_accounts.get(i).getSite(),key));
-	        	dec_account.setUsername(PBE.decryptPBE(enc_accounts.get(i).getUsername(),key));
-	        	dec_account.setPassword(PBE.decryptPBE(enc_accounts.get(i).getPassword(),key));
-	        	dec_account.setNote(PBE.decryptPBE(enc_accounts.get(i).getNote(),key));
-	        	dec_accounts.add(dec_account);
-            }
-            accountData.clear();
-            accountData.addAll(dec_accounts);
-
-            // Save the file path to the registry.
-            setAccountFilePath(file);
+    	try {
+	    	// Load the fxml file and create a new stage for the popup dialog.
+	        FXMLLoader loader = new FXMLLoader();
+	        loader.setLocation(MainApp.class.getResource("view/KeyInputDialog.fxml"));
+	        AnchorPane page = (AnchorPane) loader.load();
+	
+	    	// Create the dialog Stage.
+	        Stage dialogStage = new Stage();
+	        dialogStage.setTitle("Input Key");
+	        dialogStage.initModality(Modality.WINDOW_MODAL);
+	        dialogStage.initOwner(primaryStage);
+	        Scene scene = new Scene(page);
+	        dialogStage.setScene(scene);
+	
+	        // Set the Account into the controller.
+	        KeyInputDialogController controller = loader.getController();
+	        controller.setDialogStage(dialogStage);
+	      
+	        // Show the dialog and wait until the user closes it
+	        dialogStage.showAndWait();
+	        
+	        this.key=controller.getKey();
+	        
+	        
+	        if(this.key!=null&&this.key!="") {
+	        	
+	            JAXBContext context = JAXBContext
+	                    .newInstance(AccountListWrapper.class);
+	            Unmarshaller um = context.createUnmarshaller();
+	
+	            // Reading XML from the file and unmarshalling.
+	            AccountListWrapper wrapper = (AccountListWrapper) um.unmarshal(file);
+	            List<Account> enc_accounts=wrapper.getAccounts();
+	            List<Account> dec_accounts = new LinkedList<>();
+	            for(int i=0;i<enc_accounts.size();i++) {
+	            	Account dec_account=new Account();
+	                dec_account.setSite(PBE.decryptPBE(enc_accounts.get(i).getSite(),key));
+		        	dec_account.setUsername(PBE.decryptPBE(enc_accounts.get(i).getUsername(),key));
+		        	dec_account.setPassword(PBE.decryptPBE(enc_accounts.get(i).getPassword(),key));
+		        	dec_account.setNote(PBE.decryptPBE(enc_accounts.get(i).getNote(),key));
+		        	dec_accounts.add(dec_account);
+	            }
+	            accountData.clear();
+	            accountData.addAll(dec_accounts);
+	
+	            // Save the file path to the registry.
+	            setAccountFilePath(file);
+	        }
+	        else {
+	        	setAccountFilePath(null);
+	        }
 
         } catch (Exception e) { // catches ANY exception
 			Alert alert=new Alert(AlertType.ERROR);
@@ -256,42 +280,67 @@ public class MainApp extends Application {
      */
     public void saveAccountDataToFile(File file) {
     	
-    	TextInputDialog dialog = new TextInputDialog("");
-    	dialog.setTitle("Key");
-    	dialog.setContentText("Please enter your key:");
-    	 
-    	// Traditional way to get the response value.
-    	Optional<String> result = dialog.showAndWait();
-    	if (!result.isPresent()) System.exit(0);
-    	if (result.isPresent()){
-    	    this.key=result.get();
-    	}
-    	
         try {
-            JAXBContext context = JAXBContext
-                    .newInstance(AccountListWrapper.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-
-            // Wrapping our Account data.
-            AccountListWrapper wrapper = new AccountListWrapper();
-            List<Account> dec_accounts=accountData;
-            List<Account> enc_accounts=new LinkedList<>();
-            for(int i=0;i<dec_accounts.size();i++) {
-	            Account enc_account=new Account();
-	        	enc_account.setSite(PBE.encryptPBE(dec_accounts.get(i).getSite(),key));
-	        	enc_account.setUsername(PBE.encryptPBE(dec_accounts.get(i).getUsername(),key));
-	        	enc_account.setPassword(PBE.encryptPBE(dec_accounts.get(i).getPassword(),key));
-	        	enc_account.setNote(PBE.encryptPBE(dec_accounts.get(i).getNote(),key));
-	        	enc_accounts.add(enc_account);
-            }
-            wrapper.setAccounts(enc_accounts);
-
-            // Marshalling and saving XML to the file.
-            m.marshal(wrapper, file);
-
-            // Save the file path to the registry.
-            setAccountFilePath(file);
+        	// Load the fxml file and create a new stage for the popup dialog.
+	        FXMLLoader loader = new FXMLLoader();
+	        loader.setLocation(MainApp.class.getResource("view/KeyInputDialog.fxml"));
+	        AnchorPane page = (AnchorPane) loader.load();
+	
+	    	// Create the dialog Stage.
+	        Stage dialogStage = new Stage();
+	        dialogStage.setTitle("Input Key");
+	        dialogStage.initModality(Modality.WINDOW_MODAL);
+	        dialogStage.initOwner(primaryStage);
+	        Scene scene = new Scene(page);
+	        dialogStage.setScene(scene);
+	
+	        // Set the Account into the controller.
+	        KeyInputDialogController controller = loader.getController();
+	        controller.setDialogStage(dialogStage);
+	      
+	        // Show the dialog and wait until the user closes it
+	        controller.setLabel("请输入key");
+	        dialogStage.showAndWait();
+	        
+	        String key_1=controller.getKey();
+	        controller.clearKeyField();
+	        controller.setLabel("请再次输入key");
+	        dialogStage.showAndWait();
+	        String key_2=controller.getKey();
+	        if(key_1.equals(key_2)&&key_1!=null) {
+		        this.key=key_1;
+	        	
+	            JAXBContext context = JAXBContext
+	                    .newInstance(AccountListWrapper.class);
+	            Marshaller m = context.createMarshaller();
+	            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+	
+	            // Wrapping our Account data.
+	            AccountListWrapper wrapper = new AccountListWrapper();
+	            List<Account> dec_accounts=accountData;
+	            List<Account> enc_accounts=new LinkedList<>();
+	            for(int i=0;i<dec_accounts.size();i++) {
+		            Account enc_account=new Account();
+		        	enc_account.setSite(PBE.encryptPBE(dec_accounts.get(i).getSite(),key));
+		        	enc_account.setUsername(PBE.encryptPBE(dec_accounts.get(i).getUsername(),key));
+		        	enc_account.setPassword(PBE.encryptPBE(dec_accounts.get(i).getPassword(),key));
+		        	enc_account.setNote(PBE.encryptPBE(dec_accounts.get(i).getNote(),key));
+		        	enc_accounts.add(enc_account);
+	            }
+	            wrapper.setAccounts(enc_accounts);
+	
+	            // Marshalling and saving XML to the file.
+	            m.marshal(wrapper, file);
+	
+	            // Save the file path to the registry.
+	            setAccountFilePath(file);
+	        }
+	        else {
+	        	Alert warning=new Alert(AlertType.WARNING);
+	        	warning.setHeaderText(null);
+	            warning.setContentText("key不一致或为空");
+	            warning.showAndWait();
+	        }
         } catch (Exception e) { // catches ANY exception
         	Alert alert=new Alert(AlertType.ERROR);
         	alert.setHeaderText(null);
@@ -299,5 +348,19 @@ public class MainApp extends Application {
             alert.showAndWait();
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * Whether the data has changed
+     */
+    public boolean getIsChanged() {
+    	return isChanged;
+    }
+    
+    /**
+     * Whether the data has changed
+     */
+    public void setIsChanged(boolean isChanged) {
+    	this.isChanged=isChanged;
     }
 }

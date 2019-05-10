@@ -6,6 +6,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 
 import cn.thecutestgirl.keeper.MainApp;
 import cn.thecutestgirl.keeper.model.Account;
@@ -23,9 +25,9 @@ public class AccountOverviewController {
     @FXML
     private Label usernameLabel;
     @FXML
-    private Label passwordLabel;
-    @FXML
     private Label noteLabel;
+    @FXML
+    private String password=null;
     
 
     // Reference to the main application.
@@ -78,13 +80,12 @@ public class AccountOverviewController {
     	if(account!=null) {
     		siteLabel.setText(account.getSite());
     		usernameLabel.setText(account.getUsername());
-    		passwordLabel.setText((account.getPassword()));
+    		password=account.getPassword();
     		noteLabel.setText(account.getNote());
     	}
     	else {
     		siteLabel.setText("");
     		usernameLabel.setText("");
-    		passwordLabel.setText("");
     		noteLabel.setText("");
     	}
     }
@@ -97,6 +98,7 @@ public class AccountOverviewController {
         int selectedIndex = accountTable.getSelectionModel().getSelectedIndex();
         if(selectedIndex!=-1) {
         	accountTable.getItems().remove(selectedIndex);
+        	mainApp.setIsChanged(true);
         }
         else {
         	// Nothing selected.
@@ -135,5 +137,13 @@ public class AccountOverviewController {
 	    	alert.setHeaderText(null);
 	        alert.showAndWait();
 	    }
+	}
+	
+	@FXML
+	private void paste(){
+		Clipboard clipboard = Clipboard.getSystemClipboard();
+		ClipboardContent cc = new ClipboardContent();
+		cc.putString(password);
+		clipboard.setContent(cc);
 	}
 }

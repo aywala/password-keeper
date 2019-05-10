@@ -1,5 +1,6 @@
 package cn.thecutestgirl.keeper.view;
 
+import cn.thecutestgirl.keeper.MainApp;
 import cn.thecutestgirl.keeper.model.Account;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -26,6 +27,7 @@ public class AccountEditDialogController {
 	private Stage dialogStage;
 	private Account account;
 	private boolean okClicked=false;
+	private MainApp mainApp;
 	
 	/**
      * Initializes the controller class. This method is automatically called
@@ -38,6 +40,10 @@ public class AccountEditDialogController {
 	public void setDialogStage(Stage dialogStage) {
 		this.dialogStage=dialogStage;
 	}
+	
+	public void setMainApp(MainApp mainApp) {
+        this.mainApp = mainApp;
+    }
 	
 	public void setAccount(Account account) {
 		this.account=account;
@@ -62,6 +68,7 @@ public class AccountEditDialogController {
 		
 		okClicked=true;
 		dialogStage.close();
+		mainApp.setIsChanged(true);
 		}
 	}
 	

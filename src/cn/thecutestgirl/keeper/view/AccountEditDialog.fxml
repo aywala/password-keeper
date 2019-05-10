@@ -42,11 +42,11 @@
             </Label>
             <TextField fx:id="siteField" GridPane.columnIndex="1" />
             <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-            <TextField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <TextField fx:id="noteField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+            <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
       </GridPane>
-      <Button defaultButton="true" layoutX="246.0" layoutY="271.0" mnemonicParsing="false" onAction="#handleOk" text="确定" AnchorPane.rightAnchor="129.0" AnchorPane.topAnchor="271.0" />
+      <Button defaultButton="true" layoutX="172.0" layoutY="271.0" mnemonicParsing="false" onAction="#handleOk" text="确定" AnchorPane.rightAnchor="159.0" AnchorPane.topAnchor="271.0" />
       <Button layoutX="333.0" layoutY="271.0" mnemonicParsing="false" onAction="#handleCancel" text="取消" AnchorPane.rightAnchor="42.0" AnchorPane.topAnchor="271.0" />
    </children>
 </AnchorPane>

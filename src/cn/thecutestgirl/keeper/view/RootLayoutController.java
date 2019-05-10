@@ -2,11 +2,13 @@ package cn.thecutestgirl.keeper.view;
 
 
 import java.io.File;
+import java.util.Optional;
 
 import cn.thecutestgirl.keeper.MainApp;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 
 /**
@@ -102,7 +104,8 @@ public class RootLayoutController {
     @FXML
     private void handleAbout() {
        Alert alert=new Alert(AlertType.INFORMATION);
-       alert.setContentText("Author:Minstrel\nSite:www.thecutestgirl.cn");
+       alert.setHeaderText(null);
+       alert.setContentText("作者: Minstrel\n站点 :www.thecutestgirl.cn\nGithub: Minstrel223");
        alert.showAndWait();
     }
 
@@ -110,7 +113,32 @@ public class RootLayoutController {
      * Closes the application.
      */
     @FXML
-    private void handleExit() {
-        System.exit(0);
+    public void handleExit() {
+        if(mainApp.getIsChanged()) {
+        	Alert alert_1=new Alert(AlertType.CONFIRMATION);
+        	alert_1.setTitle("Confirmation Dialog");
+        	alert_1.setHeaderText("是否保存？");
+        	alert_1.setContentText(null);
+        	 
+        	Optional<ButtonType> result_1 = alert_1.showAndWait();
+        	if (result_1.get() == ButtonType.OK){
+        	    // ... user chose OK
+        		handleSave();
+        		System.exit(0);
+        	} else {
+        		Alert alert_2=new Alert(AlertType.CONFIRMATION);
+            	alert_2.setTitle("Confirmation Dialog");
+            	alert_2.setHeaderText("是否退出？");
+            	alert_2.setContentText(null);
+            	Optional<ButtonType> result_2 = alert_2.showAndWait();
+            	if (result_2.get() == ButtonType.OK){
+            		System.exit(0);
+            	}  
+        	}
+        }
+        else{
+        	System.exit(0);
+        	}
     }
+    
 }

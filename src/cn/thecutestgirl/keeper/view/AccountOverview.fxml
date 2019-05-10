@@ -64,8 +64,8 @@
                         </Label>
                         <Label fx:id="siteLabel" styleClass="label-bright" text="Label" GridPane.columnIndex="1" />
                         <Label fx:id="usernameLabel" styleClass="label-bright" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                        <Label fx:id="passwordLabel" styleClass="label-bright" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <Label fx:id="noteLabel" styleClass="label-bright" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                        <Button mnemonicParsing="false" onAction="#paste" text="复制" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                      </children>
                   </GridPane>
                   <HBox layoutX="224.0" layoutY="420.0" spacing="20.0" AnchorPane.bottomAnchor="15.0" AnchorPane.rightAnchor="51.0">
