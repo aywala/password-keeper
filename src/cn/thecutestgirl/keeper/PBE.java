@@ -62,9 +62,10 @@ public class PBE {
      * @param key  密钥
      * @param salt 盐
      * @return
+     * @throws UnsupportedEncodingException 
      */
-    public static String encryptPBE(String str, String key) {
-        byte[] data = str.getBytes();
+    public static String encryptPBE(String str, String key) throws UnsupportedEncodingException {
+        byte[] data = str.getBytes("UTF-8");
         byte[] bytes=null;
         try {
             // 获取密钥
